@@ -1,0 +1,139 @@
+Lab: 以 Node.js + osmosis 實作爬蟲程式
+
+
+
+
+1.	找出目標資料的 selector
+
+
+1.1	用 Chrome 連接 https://www.taipower.com.tw/TC/news2.aspx?mid=225
+
+
+1.2	滑鼠右鍵點按第一則快訊，從快捷功能表選擇最後一項:「檢查」
+
+
+1.3	滑鼠右鍵點按 <ul> 裏頭的第個 <li>，
+    從快捷功能表選擇「Copy」|「Copy selector」。
+
+
+1.4	貼入內容到本文件，應該會類似這樣:
+#news_box3 > div.box_list > ul > li:nth-child(1)
+
+
+1.5	去掉最後的 :nth-child(1)，稍後我們會用到這段語法:
+#news_box3 > div.box_list > ul > li
+
+
+
+
+2.  下載網頁
+
+
+2.1 滑鼠右鍵點按本資料夾 | Open in Terminal
+    在終端機視窗輸入下列指令以安裝本練習所需的 Node.js 模組:
+    npm install osmosis
+
+    <Note> osmosis 在 GitHub 的存放庫:
+    https://github.com/rchipka/node-osmosis
+
+
+2.2 在本資料夾建立新檔案，檔名: lab.js
+    內容如下:
+
+const osmosis = require('osmosis');
+const url = 'https://www.taipower.com.tw/TC/news2.aspx?mid=225';
+
+osmosis
+    .get(url)
+    .log(console.log);
+
+
+2.3 在終端機視窗輸入下列指令，測試網頁下載功能
+    node lab.js
+
+    <Note>順利的話，會顯示:
+    (get) loaded [get] https://www.taipower.com.tw/TC/news2.aspx?mid=225
+
+
+
+
+3.  剖析網頁內容
+
+
+3.1 修改 lab.js，新內容如下:
+
+const osmosis = require('osmosis');
+const url = 'https://www.taipower.com.tw/TC/news2.aspx?mid=225';
+
+osmosis
+    .get(url)
+    .find('#news_box3 > div.box_list > ul > li')
+    .log(console.log);
+
+  
+3.2 在終端機視窗輸入下列指令以執行Lab程式:
+    node lab.js
+
+    <Note>順利的話，會顯示:
+    (get) loaded [get] https://www.taipower.com.tw/TC/news2.aspx?mid=225
+    (find) found 10 results for "#news_box3 > div.box_list > ul > li"
+
+
+3.3 修改 lab.js，新內容如下:
+
+const osmosis = require('osmosis');
+const fs = require('fs');
+const url = 'https://www.taipower.com.tw/TC/news2.aspx?mid=225';
+
+osmosis
+    .get(url)
+    .find('#news_box3 > div.box_list > ul > li')
+    .set({
+        "title": "a div h3",
+        "dateTime": "a div span",
+        "url": "a@href"
+    })
+    .data(function (resultItem) {
+        console.log(resultItem);
+    });
+
+
+3.4 在終端機視窗輸入下列指令以執行Lab程式:
+    node lab.js
+
+    <Note>順利的話，會顯示 10 筆「最新消息」
+
+
+3.5 修改 lab.js，新內容如下:
+
+const osmosis = require('osmosis');
+const fs = require('fs');
+const url = 'https://www.taipower.com.tw/TC/news2.aspx?mid=225';
+
+var newsList = [];
+
+osmosis
+    .get(url)
+    .find('#news_box3 > div.box_list > ul > li')
+    .set({
+        "title": "a div h3",
+        "dateTime": "a div span",
+        "url": "a@href"
+    })
+    .data(function (resultItem) {
+        newsList.push(resultItem);
+    })
+    .done(function () {
+        fs.writeFileSync(
+            "newsList.json", 
+            JSON.stringify(newsList, null, 2));
+    })
+
+
+3.6 在終端機視窗輸入下列指令以執行Lab程式:
+    node lab.js
+
+    <Note>
+    順利的話，本資料夾會多出一個 newsList.json
+    內含 10 筆「最新消息」
+
